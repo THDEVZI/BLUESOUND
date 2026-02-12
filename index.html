@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <link rel="manifest" href="https://drive.google.com/uc?export=download&id=1-3LaGLoFh_qtDqGnjzJQY7fYWaZu75mk">
+<meta name="theme-color" content="#1db954">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLUESOUND </title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0f0f0f;
+            color: white;
+            overflow-x: hidden;
+            padding-bottom: 250px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px;
+            font-size: 26px;
+            font-weight: 800;
+            background: linear-gradient(transparent, #1a1a1a);
+        }
+
+        .controls-area {
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-action {
+            background: #333;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            border: 1px solid #444;
+        }
+
+        input[type="file"] { display: none; }
+        
+        .custom-file-upload {
+            background: #1db954;
+            color: black;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .section { padding: 15px; max-width: 600px; margin: 0 auto; }
+
+        .song {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            border-left: 4px solid transparent;
+        }
+
+        .song:hover { background: #252525; transform: translateX(5px); }
+        .song.playing { background: #282828; border-left: 4px solid #1db954; color: #1db954; }
+
+        #player {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(24, 24, 24, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-top: 1px solid #333;
+            transform: translateY(100%);
+            transition: 0.5s cubic-bezier(.25,.8,.25,1);
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        #player.active { transform: translateY(0); }
+
+        .playerContent {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #cover {
+            width: 120px;
+            height: 120px;
+            border-radius: 15px;
+            object-fit: cover;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 15px;
+        }
+
+        .playing-art { animation: pulse 2s infinite ease-in-out; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .controls { display: flex; gap: 20px; align-items: center; margin-bottom: 10px; }
+
+        .play-btn-circle {
+            background: #1db954;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            color: black;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 12px;
+            color: #b3b3b3;
+            margin-bottom: 5px;
+        }
+
+        #progressContainer {
+            width: 100%;
+            height: 6px;
+            background: #4f4f4f;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #progressBar {
+            height: 100%;
+            width: 0%;
+            background: #1db954;
+            border-radius: 10px;
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        input[type="range"] { flex-grow: 1; accent-color: #1db954; }
+    </style>
+</head>
+<body>
+
+<header>🎧 BLUESOUND</header>
+
+<div class="controls-area">
+    <label class="custom-file-upload">
+        <input type="file" id="fileInput" multiple accept="audio/*">
+        ➕ Adicionar Músicas
+    </label>
+    
+    <div>
+        <label class="btn-action">
+            <input type="file" id="coverInput" accept="image/*">
+            🖼️ Mudar Capa do Álbum
+        </label>
+        <button class="btn-action" onclick="clearPlaylist()">🗑️ Limpar Playlist</button>
+    </div>
+</div>
+
+<div class="section" id="library">
+    </div>
+
+<div id="player">
+    <div class="playerContent">
+        <img id="cover" src="https://m.media-amazon.com/images/I/71aP14A5JgL._AC_UF894,1000_QL80_.jpg">
+        
+        <div style="text-align: center; margin-bottom: 10px;">
+            <strong id="title" style="display: block; font-size: 18px;">Selecione uma música</strong>
+        </div>
+
+        <div class="time-info">
+            <span id="currentTime">00:00</span>
+            <span id="duration">00:00</span>
+        </div>
+
+        <div id="progressContainer">
+            <div id="progressBar"></div>
+        </div>
+
+        <div class="controls">
+            <button class="play-btn-circle" style="background:none; color:white" onclick="prevSong()">⏮</button>
+            <button class="play-btn-circle" onclick="togglePlay()" id="playBtn">▶</button>
+            <button class="play-btn-circle" style="background:none; color:white" onclick="nextSong()">⏭</button>
+        </div>
+
+        <div class="volume-container">
+            <span>🔈</span>
+            <input type="range" id="volume" min="0" max="1" step="0.01" value="1">
+            <span>🔊</span>
+        </div>
+    </div>
+</div>
+
+<audio id="audio"></audio>
+
+<script>
+    const fileInput = document.getElementById("fileInput");
+    const coverInput = document.getElementById("coverInput");
+    const library = document.getElementById("library");
+    const audio = document.getElementById("audio");
+    const player = document.getElementById("player");
+    const title = document.getElementById("title");
+    const progressBar = document.getElementById("progressBar");
+    const progressContainer = document.getElementById("progressContainer");
+    const volumeSlider = document.getElementById("volume");
+    const currentTimeEl = document.getElementById("currentTime");
+    const durationEl = document.getElementById("duration");
+    const playBtn = document.getElementById("playBtn");
+    const cover = document.getElementById("cover");
+
+    let songs = [];
+    let currentIndex = 0;
+
+    // Inicialização: Carregar capa e playlist do LocalStorage
+    window.onload = () => {
+        const savedCover = localStorage.getItem('playerCover');
+        if (savedCover) cover.src = savedCover;
+        
+        // Nota: Por segurança, navegadores não permitem salvar o ARQUIVO real no localStorage.
+        // O usuário precisará selecionar os arquivos novamente se atualizar a página,
+        // mas a estrutura está pronta para futuras implementações com IndexedDB.
+    };
+
+    // Mudar Capa do Álbum
+    coverInput.addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const base64Image = event.target.result;
+                cover.src = base64Image;
+                localStorage.setItem('playerCover', base64Image); // Salva a imagem
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Carregar arquivos de áudio
+    fileInput.addEventListener("change", function(e){
+        const newSongs = Array.from(e.target.files);
+        songs = [...songs, ...newSongs]; // Adiciona à lista atual
+        renderLibrary();
+    });
+
+    function renderLibrary() {
+        library.innerHTML = "";
+        songs.forEach((file, index) => {
+            const div = document.createElement("div");
+            div.className = `song ${index === currentIndex && !audio.paused ? 'playing' : ''}`;
+            div.innerHTML = `<span>${index + 1}.</span> <span style="margin-left:10px">${file.name}</span>`;
+            div.onclick = () => loadSong(index);
+            library.appendChild(div);
+        });
+    }
+
+    function clearPlaylist() {
+        songs = [];
+        renderLibrary();
+        audio.pause();
+        player.classList.remove("active");
+    }
+
+    function loadSong(index) {
+        currentIndex = index;
+        const file = songs[index];
+        audio.src = URL.createObjectURL(file);
+        title.innerText = file.name;
+        
+        player.classList.add("active");
+        audio.play();
+        playBtn.innerText = "⏸";
+        cover.classList.add("playing-art");
+        renderLibrary();
+    }
+
+    function togglePlay() {
+        if (audio.src) {
+            if (audio.paused) {
+                audio.play();
+                playBtn.innerText = "⏸";
+                cover.classList.add("playing-art");
+            } else {
+                audio.pause();
+                playBtn.innerText = "▶";
+                cover.classList.remove("playing-art");
+            }
+        }
+    }
+
+    function nextSong() {
+        if (currentIndex < songs.length - 1) loadSong(currentIndex + 1);
+    }
+
+    function prevSong() {
+        if (currentIndex > 0) loadSong(currentIndex - 1);
+    }
+
+    function formatTime(seconds) {
+        const min = Math.floor(seconds / 60) || 0;
+        const sec = Math.floor(seconds % 60) || 0;
+        return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    }
+
+    audio.addEventListener("timeupdate", () => {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progressBar.style.width = percent + "%";
+        currentTimeEl.innerText = formatTime(audio.currentTime);
+        if (audio.duration) durationEl.innerText = formatTime(audio.duration);
+    });
+
+    progressContainer.addEventListener("click", (e) => {
+        const width = progressContainer.clientWidth;
+        const clickX = e.offsetX;
+        audio.currentTime = (clickX / width) * audio.duration;
+    });
+
+    volumeSlider.addEventListener("input", (e) => {
+        audio.volume = e.target.value;
+    });
+
+    audio.addEventListener("ended", nextSong);
+</script>
+
+</body>
+</html>
