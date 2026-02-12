@@ -2,7 +2,7 @@
   "name": "Bluesound",
   "short_name": "Bluesound",
   "start_url": "index.html",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#0f0f0f",
   "theme_color": "#1db954",
   "icons": [
