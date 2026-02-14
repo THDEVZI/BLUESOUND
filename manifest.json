@@ -3,7 +3,7 @@
   "short_name": "Bluesound",
   "start_url": "/BLUESOUND/",
   "scope": "/BLUESOUND/",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#0f0f0f",
   "theme_color": "#007bff",
   "icons": [
@@ -17,6 +17,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "orientation": "portrait"
+  ]
 }
