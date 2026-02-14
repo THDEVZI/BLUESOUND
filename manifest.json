@@ -1,18 +1,19 @@
 {
   "name": "Bluesound",
   "short_name": "Bluesound",
-  "start_url": "index.html",
+  "start_url": "/BLUESOUND/",
+  "scope": "/BLUESOUND/",
   "display": "standalone",
   "background_color": "#0f0f0f",
-  "theme_color": "#1db954",
+  "theme_color": "#007bff",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "/BLUESOUND/icon.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon.png",
+      "src": "/BLUESOUND/icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
