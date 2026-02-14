@@ -21,30 +21,34 @@
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
+        /* CORREÇÃO PRINCIPAL: TRAVAR A TELA */
         body {
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
             background: var(--bg);
             color: var(--text);
-            padding-bottom: 140px;
-            overflow-x: hidden;
+            width: 100%;
+            height: 100%;
+            position: fixed; /* Impede o scroll elástico do navegador */
+            overflow: hidden; /* Corta qualquer coisa fora da tela */
             user-select: none;
             touch-action: pan-y;
-            overscroll-behavior-x: none;
             transition: background 0.3s, color 0.3s;
         }
 
-        [class^="ph-"] {
-            font-size: 24px;
-        }
+        ::-webkit-scrollbar { display: none; }
+
+        [class^="ph-"] { font-size: 24px; }
 
         header {
             padding: 60px 20px 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: sticky;
+            position: absolute; /* Mudado para absolute para fixar no topo do container */
             top: 0;
+            left: 0;
+            width: 100%;
             background: var(--bg);
             z-index: 100;
             transition: background 0.3s;
@@ -57,16 +61,60 @@
         .settings-icon { cursor: pointer; opacity: 0.8; color: var(--text); display: flex; align-items: center; }
         .settings-icon i { font-size: 28px; }
 
-        .search-container { padding: 0 20px 10px; transition: opacity 0.3s; }
+        .search-container { 
+            padding: 0 20px 10px; 
+            transition: opacity 0.3s;
+            position: absolute; 
+            top: 110px; /* Abaixo do header */
+            width: 100%;
+            z-index: 90;
+            background: var(--bg);
+        }
+
         .search-bar {
             width: 100%; background: rgba(150,150,150,0.2); border: none; padding: 12px 15px;
             border-radius: 12px; color: var(--text); font-size: 16px;
         }
         .search-bar::placeholder { color: var(--text); opacity: 0.5; }
 
-        .view-container { display: flex; width: 400vw; transition: transform 0.6s var(--ios-curve); }
-        .view { width: 100vw; padding: 0 20px; box-sizing: border-box; flex-shrink: 0; }
+        /* CORREÇÃO DO CONTAINER DE VISUALIZAÇÃO */
+        .view-container { 
+            display: flex; 
+            width: 400%; /* 4 telas exatas */
+            height: 100%;
+            transition: transform 0.6s var(--ios-curve); 
+            padding-top: 170px; /* Espaço para Header + Search */
+        }
+        
+        .view { 
+            width: 25%; /* 100% / 4 telas = 25% cada */
+            height: 100%;
+            padding: 0 20px 140px 20px; /* Padding bottom para o player */
+            box-sizing: border-box; 
+            flex-shrink: 0; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+            position: relative;
+        }
 
+        /* CORREÇÃO DO SLIDER DE PASTAS */
+        .folder-slide-wrapper {
+            display: flex;
+            width: 200%; /* Duas telas de largura dentro da view */
+            height: 100%;
+            transition: transform 0.5s var(--ios-curve);
+        }
+        
+        .folder-slide-page {
+            width: 50%; /* Metade do wrapper (100% da view) */
+            height: 100%;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            overflow-y: auto;
+            padding-bottom: 140px; /* Espaço pro player */
+        }
+
+        /* Botões e Itens */
         .btn-main { background: var(--accent); color: white; padding: 16px; border-radius: 16px; text-align: center; font-weight: 600; flex: 1; margin-bottom: 15px; border:none; width: 100%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-main i { font-size: 26px; }
         
@@ -112,10 +160,11 @@
         }
         
         #player.full { 
-            bottom: 0; left: 0; right: 0; height: 100vh; border-radius: 0; 
+            bottom: 0; left: 0; right: 0; height: 100%; border-radius: 0; 
             padding: 40px 30px; border: none; display: flex; flex-direction: column;
             justify-content: center; align-items: center; gap: 20px;
             background: var(--bg);
+            z-index: 3000; /* Acima de tudo */
         }
 
         #cover { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.5s var(--ios-curve); }
@@ -160,6 +209,29 @@
         #modalOverlay.active { display: flex; }
         #modalOverlay.active .modal-content { transform: scale(1); opacity: 1; }
 
+        /* NOVO: Estilos para a Sheet iOS (Jurídico) */
+        #legalSheetOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 10001;
+            display: none; opacity: 0; transition: opacity 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        #legalSheetOverlay.active { display: block; opacity: 1; }
+        
+        #legalSheet {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 90vh;
+            background: var(--card); border-radius: 24px 24px 0 0;
+            z-index: 10002; transform: translateY(100%); transition: transform 0.5s var(--ios-curve);
+            display: flex; flex-direction: column; overflow: hidden;
+            border-top: 0.5px solid rgba(150,150,150,0.2);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+        }
+        #legalSheetOverlay.active + #legalSheet, #legalSheet.active { transform: translateY(0); }
+        
+        .sheet-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid rgba(150,150,150,0.1); background: var(--card); }
+        .sheet-close { width: 32px; height: 32px; background: rgba(150,150,150,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); }
+        .sheet-body { padding: 25px; overflow-y: auto; flex: 1; color: var(--text); line-height: 1.6; font-size: 15px; }
+
         .menu-item { background: rgba(150,150,150,0.1); margin-bottom: 12px; padding: 20px; border-radius: 18px; font-weight: 600; text-align: center; color: var(--text); transition: background 0.2s; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .menu-item i { font-size: 24px; }
 
@@ -188,6 +260,15 @@
     </style>
 </head>
 <body>
+
+<div id="legalSheetOverlay" onclick="closeLegal()"></div>
+<div id="legalSheet">
+    <div class="sheet-header">
+        <h3 style="margin:0; font-size: 18px;" id="sheetTitle">Documento</h3>
+        <div class="sheet-close" onclick="closeLegal()"><i class="ph-bold ph-x"></i></div>
+    </div>
+    <div class="sheet-body" id="sheetContent"></div>
+</div>
 
 <div id="welcomeScreen">
     <div class="welcome-content">
@@ -237,14 +318,16 @@
         <div id="library"></div>
     </div>
 
-    <div class="view" id="viewFolderContent">
-        <div id="folderListContainer">
-            <button class="btn-main" onclick="openModal('playlist')"><i class="ph-bold ph-folder-plus"></i> Nova Pasta</button>
-            <div id="folderList" class="folder-list"></div>
-        </div>
-        <div id="folderSongsContainer" style="display:none">
-            <button id="delFolderBtn" class="btn-secondary" style="background:var(--danger); width:100%; margin-bottom: 20px; height: 55px; border-radius: 16px; color: white;" onclick="openModal('deleteFolder')"><i class="ph-bold ph-trash"></i> Apagar Pasta</button>
-            <div id="folderLibrary" class="folder-list"></div>
+    <div class="view" id="viewFolderContent" style="padding:0; overflow:hidden;">
+        <div class="folder-slide-wrapper" id="folderSlider">
+            <div class="folder-slide-page" id="folderListContainer" style="padding: 0 20px 140px;">
+                <button class="btn-main" onclick="openModal('playlist')"><i class="ph-bold ph-folder-plus"></i> Nova Pasta</button>
+                <div id="folderList" class="folder-list"></div>
+            </div>
+            <div class="folder-slide-page" id="folderSongsContainer" style="padding: 0 20px 140px;">
+                <button id="delFolderBtn" class="btn-secondary" style="background:var(--danger); width:100%; margin-bottom: 20px; height: 55px; border-radius: 16px; color: white;" onclick="openModal('deleteFolder')"><i class="ph-bold ph-trash"></i> Apagar Pasta</button>
+                <div id="folderLibrary" class="folder-list"></div>
+            </div>
         </div>
     </div>
 
@@ -259,6 +342,16 @@
             <div class="setting-item" onclick="goToColors()">
                 <i class="ph-bold ph-palette"></i>
                 <span style="flex:1">Personalizar Cores</span>
+                <i class="ph-bold ph-caret-right"></i>
+            </div>
+            <div class="setting-item" onclick="openLegal('privacy')">
+                <i class="ph-bold ph-lock-key"></i>
+                <span style="flex:1">Política de Privacidade</span>
+                <i class="ph-bold ph-caret-right"></i>
+            </div>
+             <div class="setting-item" onclick="openLegal('terms')">
+                <i class="ph-bold ph-file-text"></i>
+                <span style="flex:1">Termos de Uso</span>
                 <i class="ph-bold ph-caret-right"></i>
             </div>
         </div>
@@ -420,15 +513,26 @@
         }, 500);
     }
 
+    // NOVA FUNÇÃO: Sheet Jurídica com animação
     function openLegal(type) {
         const title = type === 'terms' ? "Termos de Serviço" : "Política de Privacidade";
         const content = type === 'terms' 
-            ? "O BLUESOUND PRO é um reprodutor offline. Ao importar músicas, você garante que possui os direitos legais sobre os arquivos. Não armazenamos seus dados em nuvem."
-            : "Sua privacidade é nossa prioridade. Todo o processamento de áudio, temas e lista de reprodução ocorre exclusivamente no seu dispositivo (IndexDB).";
+            ? "<h3>1. Introdução</h3><p>O BLUESOUND PRO é um reprodutor de música offline projetado para uso pessoal. Ao usar este aplicativo, você concorda que o processamento de todos os arquivos é feito localmente em seu dispositivo.</p><h3>2. Direitos Autorais</h3><p>O usuário é o único responsável pelos arquivos de áudio importados para a plataforma. O BLUESOUND PRO não fornece, hospeda ou distribui músicas protegidas por direitos autorais.</p><h3>3. Uso de Dados</h3><p>Não coletamos dados de uso, localização ou identificação pessoal. Todas as suas playlists e preferências são salvas no banco de dados do navegador (IndexDB).</p>"
+            : "<h3>Compromisso com a Privacidade</h3><p>Sua privacidade é fundamental. O BLUESOUND PRO foi construído com a filosofia 'Local-First'.</p><h3>Armazenamento</h3><p>Músicas, capas e metadados ficam armazenados exclusivamente no cache do seu navegador. Se você limpar os dados do navegador, sua biblioteca será resetada.</p><h3>Sem Rastreamento</h3><p>Não utilizamos cookies de terceiros, ferramentas de análise (analytics) ou rastreadores de publicidade.</p>";
         
-        openModal('legalText');
-        document.getElementById('modalTitle').innerText = title;
-        document.getElementById('modalBody').innerHTML = `<p style="opacity:0.7; line-height:1.6; text-align:center">${content}</p>`;
+        document.getElementById('sheetTitle').innerText = title;
+        document.getElementById('sheetContent').innerHTML = content;
+        
+        const overlay = document.getElementById('legalSheetOverlay');
+        const sheet = document.getElementById('legalSheet');
+        
+        overlay.classList.add('active');
+        sheet.classList.add('active');
+    }
+
+    function closeLegal() {
+        document.getElementById('legalSheetOverlay').classList.remove('active');
+        document.getElementById('legalSheet').classList.remove('active');
     }
 
     function loadData() {
@@ -469,7 +573,9 @@
     function syncPlaybackState() { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = audio.paused ? "paused" : "playing"; }
 
     function goToFolders() {
-        document.getElementById("viewContainer").style.transform = "translateX(-100vw)";
+        // Reseta o slider da pasta para o inicio
+        document.getElementById("folderSlider").style.transform = "translateX(0)";
+        document.getElementById("viewContainer").style.transform = "translateX(-25%)"; // Ajustado para 25% (segunda tela)
         document.getElementById("backBtn").style.display = "flex";
         document.getElementById("settingsBtn").style.display = "none";
         document.getElementById("mainTitle").innerText = "Pastas";
@@ -478,7 +584,7 @@
     }
 
     function goToSettings() {
-        document.getElementById("viewContainer").style.transform = "translateX(-200vw)";
+        document.getElementById("viewContainer").style.transform = "translateX(-50%)"; // Ajustado para 50% (terceira tela)
         document.getElementById("backBtn").style.display = "flex";
         document.getElementById("settingsBtn").style.display = "none";
         document.getElementById("mainTitle").innerText = "Ajustes";
@@ -486,17 +592,28 @@
         setTimeout(() => { document.getElementById("searchWrap").style.display = "none"; }, 300);
     }
 
-    function goToColors() { document.getElementById("viewContainer").style.transform = "translateX(-300vw)"; document.getElementById("mainTitle").innerText = "Cores"; }
+    function goToColors() { 
+        document.getElementById("viewContainer").style.transform = "translateX(-75%)"; // Ajustado para 75% (quarta tela)
+        document.getElementById("mainTitle").innerText = "Cores"; 
+    }
 
     function goBack() {
         const container = document.getElementById("viewContainer");
         const transform = container.style.transform;
-        if (transform === "translateX(-300vw)") { goToSettings(); } 
+        
+        // Ajustado para checar as novas porcentagens
+        if (transform === "translateX(-75%)") { 
+            goToSettings(); 
+        } 
         else if (currentPlaylist) {
-            currentPlaylist = null;
+            // Animação de volta da pasta (Slide Right)
+            document.getElementById("folderSlider").style.transform = "translateX(0)";
             document.getElementById("mainTitle").innerText = "Pastas";
-            document.getElementById("folderListContainer").style.display = "block";
-            document.getElementById("folderSongsContainer").style.display = "none";
+            
+            // Aguarda a animação antes de limpar o estado
+            setTimeout(() => {
+                currentPlaylist = null;
+            }, 500);
         } else {
             container.style.transform = "translateX(0)";
             document.getElementById("backBtn").style.display = "none";
@@ -595,11 +712,13 @@
     }
 
     function openFolder(n) {
-        currentPlaylist = n; document.getElementById("mainTitle").innerText = n;
-        document.getElementById("folderListContainer").style.display = "none";
-        document.getElementById("folderSongsContainer").style.display = "block";
+        currentPlaylist = n; 
+        document.getElementById("mainTitle").innerText = n;
         document.getElementById("delFolderBtn").style.display = (n === "Favoritos") ? "none" : "block";
         renderFolderSongs(n);
+        
+        // Ativa a animação de deslize
+        document.getElementById("folderSlider").style.transform = "translateX(-50%)";
     }
 
     function openModal(type, id = null, inFolder = false) {
@@ -732,7 +851,7 @@
         isExpanded = !isExpanded; document.getElementById("player").classList.toggle("full", isExpanded);
         document.getElementById("fullPlayerUI").style.display = isExpanded ? "flex" : "none";
         document.querySelectorAll(".mini-only").forEach(el => el.style.display = isExpanded ? "none" : "block");
-        document.body.style.overflow = isExpanded ? "hidden" : "auto";
+        document.body.style.overflow = isExpanded ? "hidden" : "hidden"; // Mantém hidden
     }
 
     function renderMainLibrary() {
