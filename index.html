@@ -478,6 +478,13 @@
         loadData(); 
         applySavedTheme(); 
         checkFirstVisit();
+        
+        // CORREÇÃO: Restaurar a capa personalizada ao entrar
+        const savedCover = localStorage.getItem('playerCover');
+        if (savedCover) {
+            document.querySelectorAll("#cover").forEach(img => img.src = savedCover);
+        }
+
         const lastId = localStorage.getItem('bs_last_song');
         if(lastId) {
             setTimeout(() => {
